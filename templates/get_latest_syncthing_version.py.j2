@@ -1,0 +1,14 @@
+import requests
+import sys
+import re
+
+if (sys.version_info > (3, 0)):
+    from urllib import parse
+    py_ver = 3
+else:
+    from urlparse import urlparse
+    py_ver = 2
+
+r = requests.get("{{ syncthing_download_url }}/latest")
+st_ver = re.split('\.[a-z]', re.split('syncthing-{{ syncthing_platform }}-', r.text)[1])[0]
+print(st_ver)

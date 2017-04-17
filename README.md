@@ -1,2 +1,13 @@
-# ansible-role-syncthing
-Ansible Role - Syncthing
+# Ansible Role: Syncthing
+
+Installs Syncthing on SmartOS (zone).
+
+License
+-------
+
+[Mozilla Public License Version 2.0](http://mozilla.org/MPL/2.0/)
+
+Author Information
+------------------
+
+Kristoffer Winther Balling (kwballing@gmail.com)

@@ -1,0 +1,7 @@
+#!/usr/bin/sh
+
+. /lib/svc/share/smf_include.sh
+
+{{ syncthing_path }}/syncthing -gui-address={{ syncthing_gui_address }}
+
+exit $SMF_EXIT_OK

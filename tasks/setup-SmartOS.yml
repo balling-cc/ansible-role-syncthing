@@ -1,0 +1,83 @@
+---
+- name: Update pkgin cache.
+  shell: pkgin update -f
+
+- name: Ensure python requests is installed.
+  pkgin:
+    name: py27-requests
+    state: present
+
+- name: Copy syncthing version script
+  template:
+    src: get_latest_syncthing_version.py.j2
+    dest: /tmp/get_latest_syncthing_version.py
+
+- name: Get latest syncthing version
+  command: python /tmp/get_latest_syncthing_version.py
+  register: st_ver
+  failed_when: st_ver.rc > 0
+  changed_when: no
+
+- name: Set latest syncthing version
+  set_fact:
+    syncthing_version: "{{ st_ver.stdout }}"
+  when: st_ver.rc == 0
+
+- name: Check if Syncthing is installed
+  raw: test -f {{ syncthing_path }}/syncthing
+  register: st_file
+  ignore_errors: True
+
+- name: Create Syncthing directory
+  file: path={{ syncthing_path }} state=directory owner=root group=root mode=0755
+  when: st_file|failed
+
+- name: Download Syncthing
+  get_url:
+    url: "{{ syncthing_download_url }}/download/{{ syncthing_version }}/syncthing-{{syncthing_platform}}-{{ syncthing_version }}.{{ syncthing_archive_extension }}"
+    dest: /tmp/st.tar.gz
+    validate_certs: False
+  when: st_file|failed
+
+- name: Unpack Syncthing 
+  raw: tar xpzf /tmp/st.tar.gz -C /tmp/
+  when: st_file|failed
+
+- name: Copy Syncthing binary
+  copy:
+    remote_src: True
+    src: "/tmp/syncthing-{{syncthing_platform}}-{{ syncthing_version }}/syncthing"
+    dest: "{{ syncthing_path }}/syncthing"
+    owner: root
+    group: root
+    mode: 0755
+  when: st_file|failed
+
+- name: Create script directory
+  file: path=/opt/custom/scripts state=directory
+  when: st_file|failed
+
+- name: Create smf directory
+  file: path=/opt/custom/smf state=directory
+  when: st_file|failed
+
+- name: Copy syncthing script
+  template:
+    src: syncthing.j2
+    dest: /opt/custom/scripts/syncthing
+    mode: 0755
+  when: st_file|failed
+
+- name: Copy syncthing smf script
+  template:
+    src: syncthing.xml.j2
+    dest: /opt/custom/smf/syncthing.xml
+  when: st_file|failed
+
+- name: Import syncthing relay server smf script
+  raw: svccfg import /opt/custom/smf/syncthing.xml 
+  when: st_file|failed
+
+- name: Enable syncthing relay server
+  raw: svcadm enable syncthing
+  when: st_file|failed

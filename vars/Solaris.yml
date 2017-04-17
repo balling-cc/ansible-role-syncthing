@@ -1,0 +1,6 @@
+---
+syncthing_platform: "solaris-amd64"
+syncthing_path: /opt/local/sbin
+syncthing_version: v0.14.26
+syncthing_archive_extension: "tar.gz"
+
